@@ -1,0 +1,8 @@
+@"
+__pycache__/
+*.pyc
+.venv/
+venv/
+Thumbs.db
+"@ | Set-Content .gitignore
+Get-Content .gitignore
