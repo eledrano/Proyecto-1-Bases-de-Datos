@@ -61,3 +61,34 @@ CREATE TABLE tareas (
     CONSTRAINT chk_tareas_prioridad CHECK (prioridad IN ('Alta','Media','Baja')),
     CONSTRAINT chk_tareas_estado CHECK (estado IN ('Pendiente','En progreso','Completada','Cancelada'))
 );
+
+INSERT INTO usuarios (nombre, apellido) VALUES
+    ('Ana', 'Rojas'), ('Luis', 'Mora'), ('Carla', 'Vega');
+
+INSERT INTO categorias (nombre, id_categoria_padre) VALUES
+    ('Trabajo', NULL), ('Personal', NULL);
+INSERT INTO categorias (nombre, id_categoria_padre) VALUES
+    ('Reuniones', 1), ('Capacitaciones', 1);
+
+insert into eventos (id_usuario_propietario, id_categoria, id_ubicacion, titulo, descripcion, fecha_inicio, fecha_fin) values
+	('2', '2', '3', 'Anniversario', null, '2026-10-14 14:00', '2026-10-14 17:00'),	
+	('1', '2', '1', 'Cumpleaños', null, '2027-03-29 11:00', '2027-03-29 15:00'),
+	('1', '1', '1', 'Lanzamiento App', null, '2026-10-31 9:00', '2026-10-31 11:00'),
+	('3', '4', '2', 'Inducción', null, '2026-09-18 8:00', '2026-09-18 17:00'),
+	('2', '3', '3', 'Proyecto VMax', null, '2026-10-13 10:00', '2026-10-14 15:00');
+
+-- Consulta RF-10
+create view vista_ranking_ubicaciones as
+	select u.nombre, count(e.id_evento ) as total_eventos
+	from ubicaciones u
+	left join eventos e on u.id_ubicacion = e.id_ubicacion
+	group by u.nombre order by total_eventos  desc 
+
+-- Consulta RF-09
+
+create view vista_eventos_simultaneos as
+	select e1.titulo as evento_1, e1.fecha_inicio as inicio_1, e1.fecha_fin as fin_1,
+	       e2.titulo as evento_2, e2.fecha_inicio as inicio_2, e2.fecha_fin as fin_2, e1.id_ubicacion 
+	from eventos e1 join eventos e2 on e1.id_ubicacion = e2.id_ubicacion 
+	where e1.id_evento < e2.id_evento 
+	and e1.fecha_fin < e2.fecha_fin and e2.fecha_inicio < e1.fecha_fin 
