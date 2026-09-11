@@ -119,3 +119,30 @@ create view vista_franjas_disponibles as
 	join disponibilidades d on d.id_usuario = u.id_usuario
 	join tipos_disponibilidad td on td.id_tipo = d.id_tipo
 	where td.nombre = 'Disponible' and u.activo = true;
+
+insert into tareas (id_evento, id_usuario, titulo, descripcion, fecha_limite) values
+	('4', '2', 'Documentar funciones', null, '2026-09-30'),
+	('1', '2', 'Comprar pastel', null, '2027-03-28'),
+	('3', '3', 'Diseñar guías', null, '2026-09-09');
+
+-- Consultas RF-16
+
+create view vista_tareas_pendientes_usuario as
+select u.id_usuario, u.nombre, u.apellido,
+       count(t.id_tarea) as total_pendientes
+from usuarios u
+left join tareas t on t.id_usuario = u.id_usuario
+                   and t.estado in ('Pendiente', 'En progreso')
+where u.activo = true
+group by u.id_usuario, u.nombre, u.apellido
+order by total_pendientes desc;
+
+create view vista_eventos_tareas_vencidas as
+select e.id_evento, e.titulo, e.fecha_inicio,
+       count(t.id_tarea) as tareas_vencidas
+from eventos e
+join tareas t on t.id_evento = e.id_evento
+where t.fecha_limite < current_date
+  and t.estado in ('Pendiente', 'En progreso')
+group by e.id_evento, e.titulo, e.fecha_inicio
+order by tareas_vencidas desc;
