@@ -92,3 +92,30 @@ create view vista_eventos_simultaneos as
 	from eventos e1 join eventos e2 on e1.id_ubicacion = e2.id_ubicacion 
 	where e1.id_evento < e2.id_evento 
 	and e1.fecha_fin < e2.fecha_fin and e2.fecha_inicio < e1.fecha_fin 
+
+-- Consulta RF-12
+
+create view vista_usuarios_ocupados as
+select u.id_usuario, u.nombre, u.apellido,
+       e.fecha_inicio as ocupado_desde, e.fecha_fin as ocupado_hasta,
+       e.titulo as motivo
+from usuarios u
+join eventos e on e.id_usuario_propietario = u.id_usuario
+where u.activo = true 
+union all
+select u.id_usuario, u.nombre, u.apellido,
+       (d.fecha + d.hora_inicio), (d.fecha + d.hora_fin), td.nombre
+from usuarios u
+join disponibilidades d on d.id_usuario = u.id_usuario
+join tipos_disponibilidad td on td.id_tipo = d.id_tipo
+where td.nombre in ('Ocupado', 'No disponible') and u.activo = true;
+
+create view vista_franjas_disponibles as
+	select u.id_usuario, u.nombre, u.apellido,
+		(d.fecha + d.hora_inicio) as disponible_desde,
+       	(d.fecha + d.hora_fin) as disponible_hasta,
+       	td.nombre as tipo
+	from usuarios u
+	join disponibilidades d on d.id_usuario = u.id_usuario
+	join tipos_disponibilidad td on td.id_tipo = d.id_tipo
+	where td.nombre = 'Disponible' and u.activo = true;
