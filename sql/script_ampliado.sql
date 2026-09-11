@@ -146,3 +146,16 @@ where t.fecha_limite < current_date
   and t.estado in ('Pendiente', 'En progreso')
 group by e.id_evento, e.titulo, e.fecha_inicio
 order by tareas_vencidas desc;
+
+-- Consulta RF-17
+
+create view vista_carga_trabajo_usuario as
+select u.id_usuario, u.nombre, u.apellido,
+       count(t.id_tarea) as tareas_activas,
+       count(t.id_tarea) filter (where t.fecha_limite < current_date) as tareas_vencidas
+from usuarios u
+left join tareas t on t.id_usuario = u.id_usuario
+                   and t.estado in ('Pendiente', 'En progreso')
+where u.activo = true
+group by u.id_usuario, u.nombre, u.apellido
+order by tareas_vencidas desc, tareas_activas desc;
