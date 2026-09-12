@@ -1,13 +1,9 @@
-# Matriz de Trazabilidad y Estado de Implementación
+## Matriz de Trazabilidad y Estado de Implementación
 
-**Proyecto 1 – Intervención sobre una Base de Datos Existente**
+Proyecto 1 – Intervención sobre una Base de Datos Existente
 Agenda Digital "Tres Patitos"
 
-**Módulos seleccionados:** Gestión de Ubicaciones · Disponibilidad de Usuarios y Gestión de Tiempos · Tareas Asociadas a Eventos
-
-**Módulo no seleccionado:** Eventos Recurrentes (RF-13 y RF-14).
-
-**Estados posibles:** Pendiente · En progreso · Completado
+Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y Gestión de Tiempos · Tareas Asociadas a Eventos
 
 ---
 
@@ -15,16 +11,16 @@ Agenda Digital "Tres Patitos"
 
 | Req. | Fase | Tarea | Estado |
 |---|---|---|---|
-| RF-08 | 1. Modelo Conceptual | Definir la entidad `ubicaciones` y sus atributos obligatorios: id_ubicacion (PK), nombre, direccion, ciudad y capacidad. | Pendiente |
-| | 2. Modelo Lógico | Estructurar la tabla relacional `ubicaciones` con tipos de datos y clave primaria. | Pendiente |
-| | 3. Modelo Físico | Codificar el CREATE TABLE en PostgreSQL con restricciones de nulidad y tipos óptimos. | Pendiente |
-| | 4. Interfaz Gráfica | Desarrollar la pestaña, tabla y formulario CRUD de recintos. | Pendiente |
-| RF-09 | 1. Modelo Conceptual | Establecer la relación y cardinalidad entre `eventos` y `ubicaciones`. | Pendiente |
-| | 2. Modelo Lógico | Incorporar `id_ubicacion` como clave foránea en el esquema de eventos. | Pendiente |
-| | 3. Modelo Físico | Ejecutar el ALTER TABLE de la relación referencial y soportar la detección de eventos simultáneos en un mismo recinto. | Pendiente |
-| | 4. Interfaz Gráfica | Integrar el selector de ubicación y las consultas de histórico y conflictos de espacio. | Pendiente |
-| RF-10 | 3. Modelo Físico | Diseñar la consulta del ranking de recintos más solicitados por volumen de eventos. | Pendiente |
-| | 4. Interfaz Gráfica | Implementar el panel de reportes de solo lectura con la tasa de uso de los espacios. | Pendiente |
+| RF-08 | 1. Modelo Conceptual | Definir la entidad `ubicaciones` y sus atributos obligatorios: id_ubicacion (PK), nombre, direccion, ciudad y capacidad. | Completado |
+| | 2. Modelo Lógico | Estructurar la tabla relacional `ubicaciones` especificando tipos de datos y su clave primaria. | Completado |
+| | 3. Modelo Físico | Codificar el comando CREATE TABLE en PostgreSQL asegurando restricciones de nulidad y tipos óptimos. | Completado |
+| | 4. Interfaz Gráfica (GUI) | Desarrollar la pestaña y tabla de ubicaciones junto al formulario de entradas para registrar, consultar, actualizar y eliminar recintos | Pendiente |
+| RF-09 | 1. Modelo Conceptual | Establecer la relación de cardinalidad entre la entidad Eventos y la entidad ubicaciones mediante la clave foránea id_ubicacion.  | Completado |
+| | 2. Modelo Lógico | Incorporar el atributo id_ubicacion como Clave Foránea (FK) en el esquema relacional de eventos para estructurar consultas complejas.  | Completado |
+| | 3. Modelo Físico | Ejecutar la sentencia en PostgreSQL para añadir la relación referencial y soportar la detección de eventos simultáneos en un mismo recinto.  | Completado |
+| | 4. Interfaz Gráfica (GUI) | Integrar consultas y selectores en la interfaz para consultar el histórico por ubicación y prevenir conflictos de espacio temporal. | Pendiente |
+| RF-10 | 3. Modelo Físico | Diseñar y escribir las consultas para calcular el ranking de recintos más solicitados y con mayor volumen de eventos.  | Completado |
+| | 4. Interfaz Gráfica (GUI) | Implementar un panel de reportes de solo lectura en la GUI para mostrar la tasa de uso de los espacios y la demanda operativa. | Pendiente |
 
 ---
 
@@ -32,12 +28,12 @@ Agenda Digital "Tres Patitos"
 
 | Req. | Fase | Tarea | Estado |
 |---|---|---|---|
-| RF-11 | 1. Modelo Conceptual | Definir la entidad `disponibilidades` vinculada al usuario y el catálogo `tipos_disponibilidad`, con fecha, hora de inicio y hora de fin. | Pendiente |
-| | 2. Modelo Lógico | Estructurar ambas tablas y la clave foránea hacia `usuarios`. | Pendiente |
-| | 3. Modelo Físico | Codificar la creación de tablas y catálogo asegurando la integridad de las franjas temporales. | Pendiente |
-| | 4. Interfaz Gráfica | Desarrollar el CRUD de periodos libres u ocupados por usuario. | Pendiente |
-| RF-12 | 3. Modelo Físico | Estructurar las consultas de detección de cruces o traslapes entre eventos y disponibilidades. | Pendiente |
-| | 4. Interfaz Gráfica | Integrar la consulta de usuarios libres en un rango horario específico. | Pendiente |
+| RF-11 | 1. Modelo Conceptual | Definir la entidad disponibilidades vinculada al perfil del usuario y el catálogo tipos_disponibilidad con sus atributos obligatorios de fecha y horas. | Completado |
+| | 2. Modelo Lógico | Estructurar las tablas relacionales para el control de disponibilidades y su clave foranea hacia usuarios.  | Completado |
+| | 3. Modelo Físico | Codificar la creación de tablas y catálogos en PostgreSQL asegurando la integridad de las franjas temporales.  | Completado |
+| | 4. Interfaz Gráfica (GUI) | Desarrollar el módulo en la interfaz para que los usuarios administren sus periodos libres u ocupados mediante operaciones CRUD completas.  | Pendiente |
+| RF-12 | 3. Modelo Físico | Estructurar las consultas analíticas en el motor de base de datos para la detección de cruces o traslapes temporales entre eventos y disponibilidades.  | Completado |
+| | 4. Interfaz Gráfica (GUI) | Integrar las salidas analíticas en la GUI para determinar automáticamente usuarios libres y disponibles en un rango horario específico.  | Pendiente |
 
 ---
 
@@ -45,11 +41,11 @@ Agenda Digital "Tres Patitos"
 
 | Req. | Fase | Tarea | Estado |
 |---|---|---|---|
-| RF-15 | 1. Modelo Conceptual | Definir la entidad `tareas` vinculada a eventos, con título, descripción, prioridad, fecha límite, responsable y estados. | Pendiente |
-| | 2. Modelo Lógico | Establecer las claves foráneas hacia el evento y el usuario responsable. | Pendiente |
-| | 3. Modelo Físico | Crear la tabla en PostgreSQL con la restricción CHECK de los estados predefinidos. | Pendiente |
-| | 4. Interfaz Gráfica | Habilitar el CRUD completo, incluida la actualización de estados. | Pendiente |
-| RF-16 | 3. Modelo Físico | Desarrollar las consultas de tareas pendientes por usuario y eventos con tareas vencidas. | Pendiente |
-| | 4. Interfaz Gráfica | Desplegar estas métricas operativas en las pantallas de la aplicación. | Pendiente |
-| RF-17 | 3. Modelo Físico | Estructurar la consulta del reporte cuantitativo de tareas activas por estado y plazos vencidos. | Pendiente |
-| | 4. Interfaz Gráfica | Integrar el reporte de seguimiento para detectar sobrecargas de trabajo. | Pendiente |
+| RF-15 | 1. Modelo Conceptual | Definir la entidad tareas vinculada a eventos con atributos de título, descripción, prioridad, fecha límite, responsable y estados. | Completado |
+| | 2. Modelo Lógico | Establecer las claves foráneas que relacionan cada tarea con su evento y usuario responsable. | Completado |
+| | 3. Modelo Físico | Ejecutar la creación de la tabla tareas en PostgreSQL con restricciones para los estados predefinidos. | Completado |
+| | 4. Interfaz Gráfica (GUI) | Habilitar formularios de control para que cada usuario realice un CRUD completo (crear, leer, actualizar estados y eliminar) desde la interfaz. | Pendiente |
+| RF-16 | 3. Modelo Físico | Desarrollar las consultas orientadas a medir el rendimiento, tareas pendientes por usuario y detección de pendientes vencidos fuera de plazo.  | Completado |
+| | 4. Interfaz Gráfica (GUI) | Configurar el despliegue de estas métricas operativas directamente en las pantallas de la aplicación.  | Pendiente |
+| RF-17 | 3. Modelo Físico | Estructurar la consulta del reporte analítico cuantitativo para filtrar tareas activas por estado y plazos vencidos. | Completado |
+| | 4. Interfaz Gráfica (GUI) | Integrar el reporte de seguimiento dentro de la interfaz del módulo de tareas para la detección temprana de sobrecargas de trabajo.  | Pendiente |
