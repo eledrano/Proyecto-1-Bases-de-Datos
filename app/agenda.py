@@ -131,6 +131,7 @@ class AppAgenda(ctk.CTk):
             ("Usuarios", "👥"),
             ("Categorías", "📁"),
             ("Eventos", "🗓️"),
+            ("Ubicaciones", "📍"), # Crear pestaña Ubicaciones
         ], start=2):
             btn = ctk.CTkButton(
                 self.sidebar_frame, text=f"{icono}  {nombre}",
@@ -144,7 +145,7 @@ class AppAgenda(ctk.CTk):
             self.sidebar_frame,
             text="🔄  Recargar datos",
             command=self.actualizar_todas_las_tablas
-        ).grid(row=5, column=0, padx=15, pady=(20, 5), sticky="ew")
+        ).grid(row=6, column=0, padx=15, pady=(20, 5), sticky="ew")
 
         ctk.CTkLabel(self.sidebar_frame, text="APARIENCIA", font=ctk.CTkFont(size=11, weight="bold")).grid(
             row=11, column=0, padx=20, pady=(10, 5), sticky="w"
@@ -169,10 +170,12 @@ class AppAgenda(ctk.CTk):
         self.tab_usuarios = self.tabview.add("Usuarios")
         self.tab_categorias = self.tabview.add("Categorías")
         self.tab_eventos = self.tabview.add("Eventos")
+        self.tab_ubicaciones = self.tabview.add("Ubicaciones")
 
         self.configurar_pestana_usuarios()
         self.configurar_pestana_categorias()
         self.configurar_pestana_eventos()
+        self.configurar_pestana_ubicaciones() # Ampliación area de Ubicaciones en la interfaz
         self.seleccionar_modulo("Usuarios")
 
     def al_cambiar_pestana(self):
@@ -619,13 +622,119 @@ class AppAgenda(ctk.CTk):
 
     # -------------------- UBICACIONES -------------------------
 
+    def configurar_pestana_ubicaciones(self):
+        self.crear_encabezado(self.tab_ubicaciones, "Ubicaciones", "Gestiona los recintos físicos en los que se realizan eventos")
+
+        cuerpo = ctk.CTkFrame(self.tab_ubicaciones, fg_color="transparent")
+        cuerpo.pack(fill="both", expand=True, padx=10, pady=5)
+        cuerpo.grid_columnconfigure(0, weight=3); cuerpo.grid_columnconfigure(1, weight=1); cuerpo.grid_rowconfigure(0, weight=1)
+
+        tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
+
+        self.tree_ubicaciones = self.crear_treeview(
+            tabla, ("ID", "Nombre", "Dirección", "Ciudad", "Capacidad"),
+            (70, 200, 250, 150, 150)
+        )
+        self.tree_ubicaciones.bind("<<TreeviewSelect>>", self.cargar_ubicacion_seleccionada)
+        
+        ctk.CTkLabel(form, text="Formulario de ubicación", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 12))
+
+        self.entry_ub_nombre = ctk.CTkEntry(form, placeholder_text="Nombre del recinto")
+        self.entry_ub_nombre.pack(fill="x", padx=10, pady=6)
+
+        self.entry_ub_direccion = ctk.CTkEntry(form, placeholder_text="Dirección")
+        self.entry_ub_direccion.pack(fill="x", padx=10, pady=6)
+
+        self.entry_ub_ciudad = ctk.CTkEntry(form, placeholder_text="Ciudad")
+        self.entry_ub_ciudad.pack(fill="x", padx=10, pady=6)
+
+        self.entry_ub_capacidad = ctk.CTkEntry(form, placeholder_text="Capacidad")
+        self.entry_ub_capacidad.pack(fill="x", padx=10, pady=6)
+
+        ctk.CTkButton(form, text="➕ Crear ubicación", command=self.agregar_ubicacion).pack(fill="x", padx=10, pady=(15, 5))
+        ctk.CTkButton(form, text="💾 Actualizar selección", command=self.actualizar_ubicacion).pack(fill="x", padx=10, pady=5)
+        ctk.CTkButton(form, text="🧹 Nueva / Limpiar", command=self.limpiar_form_ubicacion, fg_color="gray").pack(fill="x", padx=10, pady=5)
+        ctk.CTkButton(form, text="🗑️ Eliminar selección", command=self.eliminar_ubicacion, fg_color="#b33939", hover_color="#8f2d2d").pack(fill="x", padx=10, pady=5)
+
+    def ubicacion_seleccionada_id(self):
+        sel = self.tree_ubicaciones.selection()
+        return self.tree_ubicaciones.item(sel[0])["values"][0] if sel else None
+
+    def cargar_ubicacion_seleccionada(self, _=None):
+        sel = self.tree_ubicaciones.selection()
+        if not sel: return
+        vals = self.tree_ubicaciones.item(sel[0])["values"]
+        self.entry_ub_nombre.delete(0, tk.END); self.entry_ub_nombre.insert(0, vals[1])
+        self.entry_ub_direccion.delete(0, tk.END); self.entry_ub_direccion.insert(0, vals[2])
+        self.entry_ub_ciudad.delete(0, tk.END); self.entry_ub_ciudad.insert(0, vals[3])
+        self.entry_ub_capacidad.delete(0, tk.END); self.entry_ub_capacidad.insert(0, vals[4])
+
+    def limpiar_form_ubicacion(self):
+        self.tree_ubicaciones.selection_remove(self.tree_ubicaciones.selection())
+        self.entry_ub_nombre.delete(0, tk.END)
+        self.entry_ub_direccion.delete(0, tk.END)
+        self.entry_ub_ciudad.delete(0, tk.END)
+        self.entry_ub_capacidad.delete(0, tk.END)
+
+    def datos_ubicacion_formulario(self):
+        nombre = self.entry_ub_nombre.get().strip()
+        direccion = self.entry_ub_direccion.get().strip()
+        ciudad = self.entry_ub_ciudad.get().strip()
+        capacidad = self.entry_ub_capacidad.get().strip()
+        if not nombre or not direccion or not ciudad or not capacidad:
+            raise ValueError("Complete nombre, dirección, ciudad y capacidad.")
+        if not capacidad.isdigit() or int(capacidad) <= 0:
+            raise ValueError("Capacidad debe ser un número entero mayor que 0")
+        return nombre, direccion, ciudad, int(capacidad)
+
+    def agregar_ubicacion(self):
+        try:
+            datos = self.datos_ubicacion_formulario()
+            self.ejecutar_consulta("""
+                INSERT INTO ubicaciones
+                (nombre, direccion, ciudad, capacidad)
+                VALUES (%s, %s, %s, %s)
+            """, datos)
+            self.limpiar_form_ubicacion(); self.actualizar_todas_las_tablas()
+            messagebox.showinfo("Éxito", "Ubicación creada correctamente.")
+        except Exception as e:
+            messagebox.showerror("No se pudo crear la ubicación", str(e))
+
+    def actualizar_ubicacion(self):
+        uid = self.ubicacion_seleccionada_id()
+        if uid is None: return messagebox.showwarning("Selección requerida", "Selecciona una ubicación.")
+        try:
+            nombre, direccion, ciudad, capacidad = self.datos_ubicacion_formulario()
+            self.ejecutar_consulta("""
+                UPDATE ubicaciones SET nombre=%s, direccion=%s, ciudad=%s,capacidad=%s
+                WHERE id_ubicacion=%
+            """, (nombre, direccion, ciudad, capacidad, uid))
+            self.actualizar_todas_las_tablas()
+            messagebox.showinfo("Éxito", "Ubicación actualizada.")
+        except Exception as e:
+            messagebox.showerror("No se pudo actualizar", str(e)) 
+
+    def eliminar_ubicacion(self):
+        uid = self.ubicacion_seleccionada_id()
+        if uid is None: return messagebox.showwarning("Selección requerida", "Selecciona una ubicación.")
+        if not messagebox.askyesno("Confirmar", "¿Eliminar la ubicación seleccionada?"): return
+        try:
+            self.ejecutar_consulta("DELETE FROM ubicaciones WHERE id_ubicacion=%s", (uid,))
+            self.limpiar_form_ubicacion(); self.actualizar_todas_las_tablas()
+            messagebox.showinfo("Eliminado", "Ubicación eliminada.")
+        except Exception as e:
+            messagebox.showerror("No se pudo eliminar", str(e))
+
     def cargar_datos_ubicaciones(self):
         try:
             rows = self.ejecutar_consulta(
-                "SELECT id_ubicacion, nombre FROM ubicaciones ORDER BY nombre", fetch=True)
+                "SELECT id_ubicacion, nombre, direccion, ciudad, capacidad FROM ubicaciones ORDER BY nombre", fetch=True)
+            for item in self.tree_ubicaciones.get_children(): self.tree_ubicaciones.delete(item)
             self.ubicaciones_combo = {}
-            for uid, nombre in rows:
-                self.ubicaciones_combo[f"{nombre} - #{uid}"] = uid
+            for row in rows:
+                self.tree_ubicaciones.insert("", "end", values=(row[0], row[1], row[2], row[3], row[4]))
+                self.ubicaciones_combo[f"{row[1]} - #{row[0]}"] = row[0]
         except Exception as e:
             print(f"Error cargando las ubicaciones: {e}")
 

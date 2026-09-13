@@ -14,7 +14,7 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | RF-08 | 1. Modelo Conceptual | Definir la entidad `ubicaciones` y sus atributos obligatorios: id_ubicacion (PK), nombre, direccion, ciudad y capacidad. | Completado |
 | | 2. Modelo Lógico | Estructurar la tabla relacional `ubicaciones` especificando tipos de datos y su clave primaria. | Completado |
 | | 3. Modelo Físico | Codificar el comando CREATE TABLE en PostgreSQL asegurando restricciones de nulidad y tipos óptimos. | Completado |
-| | 4. Interfaz Gráfica (GUI) | Desarrollar la pestaña y tabla de ubicaciones junto al formulario de entradas para registrar, consultar, actualizar y eliminar recintos | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Desarrollar la pestaña y tabla de ubicaciones junto al formulario de entradas para registrar, consultar, actualizar y eliminar recintos | Completado |
 | RF-09 | 1. Modelo Conceptual | Establecer la relación de cardinalidad entre la entidad Eventos y la entidad ubicaciones mediante la clave foránea id_ubicacion.  | Completado |
 | | 2. Modelo Lógico | Incorporar el atributo id_ubicacion como Clave Foránea (FK) en el esquema relacional de eventos para estructurar consultas complejas.  | Completado |
 | | 3. Modelo Físico | Ejecutar la sentencia en PostgreSQL para añadir la relación referencial y soportar la detección de eventos simultáneos en un mismo recinto.  | Completado |
