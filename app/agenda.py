@@ -33,6 +33,7 @@ class AppAgenda(ctk.CTk):
         self.usuarios_combo = {}
         self.categorias_combo = {}
         self.categorias_padre_combo = {}
+        self.ubicaciones_combo = {}
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -432,9 +433,10 @@ class AppAgenda(ctk.CTk):
         tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
 
+        # Ampliar agregando valor y asignando su Label
         self.tree_eventos = self.crear_treeview(
-            tabla, ("ID", "Propietario", "Categoría", "Título", "Inicio", "Fin"),
-            (70, 170, 150, 220, 150, 150)
+            tabla, ("ID", "Propietario", "Categoría", "Título", "Inicio", "Fin", "Ubicación"),
+            (70, 170, 150, 220, 150, 150, 200)
         )
         self.tree_eventos.bind("<<TreeviewSelect>>", self.cargar_evento_seleccionado)
 
@@ -467,6 +469,12 @@ class AppAgenda(ctk.CTk):
         self.hora_fin = ctk.CTkEntry(fila_fin, placeholder_text="HH:MM", width=75)
         self.hora_fin.pack(side="left", padx=(6, 0))
 
+        ctk.CTkLabel(form, text="Ubicación").pack(anchor="w", padx=10, pady=(10, 2))
+        self.combo_ev_ubicacion = ctk.CTkComboBox(form, values=["Seleccione una ubicación"], state="readonly")
+        self.combo_ev_ubicacion.set("Seleccione una ubicación")
+        self.combo_ev_ubicacion.pack(fill="x", padx=10, pady=4)
+        
+
         ctk.CTkButton(form, text="➕ Crear evento", command=self.agregar_evento).pack(fill="x", padx=10, pady=(16, 5))
         ctk.CTkButton(form, text="💾 Actualizar seleccionado", command=self.actualizar_evento).pack(fill="x", padx=10, pady=5)
         ctk.CTkButton(form, text="🧹 Nuevo / Limpiar", command=self.limpiar_form_evento, fg_color="gray").pack(fill="x", padx=10, pady=5)
@@ -496,12 +504,14 @@ class AppAgenda(ctk.CTk):
         return self.tree_eventos.item(sel[0])["values"][0] if sel else None
 
     def cargar_evento_seleccionado(self, _=None):
+        # Ampliar ubicacion en la carga
         sel = self.tree_eventos.selection()
         if not sel: return
         vals = self.tree_eventos.item(sel[0])["values"]
         self.entry_ev_titulo.delete(0, tk.END); self.entry_ev_titulo.insert(0, vals[3])
         self.combo_ev_usuario.set(vals[1])
         self.combo_ev_categoria.set(vals[2])
+        self.combo_ev_ubicacion.set(vals[6])
         try:
             ini = datetime.strptime(str(vals[4]), "%Y-%m-%d %H:%M")
             fin = datetime.strptime(str(vals[5]), "%Y-%m-%d %H:%M")
@@ -517,6 +527,7 @@ class AppAgenda(ctk.CTk):
         self.entry_ev_titulo.delete(0, tk.END)
         self.combo_ev_usuario.set("Seleccione un usuario")
         self.combo_ev_categoria.set("Seleccione una categoría")
+        self.combo_ev_ubicacion.set("Seleccione una ubicación")
         hoy = datetime.now()
         self.establecer_fecha(self.fecha_inicio, hoy); self.establecer_fecha(self.fecha_fin, hoy)
         self.hora_inicio.delete(0, tk.END); self.hora_inicio.insert(0, "09:00")
@@ -526,24 +537,25 @@ class AppAgenda(ctk.CTk):
         titulo = self.entry_ev_titulo.get().strip()
         usuario = self.usuarios_combo.get(self.combo_ev_usuario.get())
         categoria = self.categorias_combo.get(self.combo_ev_categoria.get())
+        ubicacion = self.ubicaciones_combo.get(self.combo_ev_ubicacion.get())
         try:
             inicio = datetime.strptime(f"{self.obtener_fecha(self.fecha_inicio)} {self.hora_inicio.get().strip()}", "%Y-%m-%d %H:%M")
             fin = datetime.strptime(f"{self.obtener_fecha(self.fecha_fin)} {self.hora_fin.get().strip()}", "%Y-%m-%d %H:%M")
         except ValueError:
             raise ValueError("La hora debe tener formato HH:MM, por ejemplo 09:30.")
-        if not titulo or usuario is None or categoria is None:
-            raise ValueError("Completa título, propietario y categoría.")
+        if not titulo or usuario is None or categoria is None or ubicacion is None:
+            raise ValueError("Completa título, propietario, categoría y ubicación.")
         if fin <= inicio:
             raise ValueError("La fecha y hora de finalización deben ser posteriores al inicio.")
-        return usuario, categoria, titulo, inicio, fin
+        return usuario, categoria, ubicacion, titulo, inicio, fin
 
     def agregar_evento(self):
         try:
             datos = self.datos_evento_formulario()
             self.ejecutar_consulta("""
                 INSERT INTO eventos
-                (id_usuario_propietario, id_categoria, titulo, fecha_inicio, fecha_fin)
-                VALUES (%s, %s, %s, %s, %s)
+                (id_usuario_propietario, id_categoria, id_ubicacion, titulo, fecha_inicio, fecha_fin)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, datos)
             self.limpiar_form_evento(); self.cargar_datos_eventos()
             messagebox.showinfo("Éxito", "Evento creado correctamente.")
@@ -554,11 +566,11 @@ class AppAgenda(ctk.CTk):
         eid = self.evento_seleccionado_id()
         if eid is None: return messagebox.showwarning("Selección requerida", "Selecciona un evento.")
         try:
-            usuario, categoria, titulo, inicio, fin = self.datos_evento_formulario()
+            usuario, categoria, ubicacion, titulo, inicio, fin = self.datos_evento_formulario()
             self.ejecutar_consulta("""
-                UPDATE eventos SET id_usuario_propietario=%s, id_categoria=%s,
+                UPDATE eventos SET id_usuario_propietario=%s, id_categoria=%s, id_ubicacion=%s,
                 titulo=%s, fecha_inicio=%s, fecha_fin=%s WHERE id_evento=%s
-            """, (usuario, categoria, titulo, inicio, fin, eid))
+            """, (usuario, categoria, ubicacion, titulo, inicio, fin, eid))
             self.cargar_datos_eventos(); messagebox.showinfo("Éxito", "Evento actualizado.")
         except Exception as e:
             messagebox.showerror("No se pudo actualizar", str(e))
@@ -575,37 +587,56 @@ class AppAgenda(ctk.CTk):
             messagebox.showerror("No se pudo eliminar", str(e))
 
     def cargar_datos_eventos(self):
-        try:
+        # Ampliar ubicacion en SELECT, crear un JOIN adicional y ubicacion dentro de ciclo for
+        try: 
             rows = self.ejecutar_consulta("""
                 SELECT e.id_evento, u.id_usuario, u.nombre, u.apellido,
-                       c.id_categoria, c.nombre, e.titulo, e.fecha_inicio, e.fecha_fin
+                       c.id_categoria, c.nombre, e.titulo, e.fecha_inicio, e.fecha_fin,
+                       ub.id_ubicacion, ub.nombre
                 FROM eventos e
                 JOIN usuarios u ON u.id_usuario = e.id_usuario_propietario
                 JOIN categorias c ON c.id_categoria = e.id_categoria
+                JOIN ubicaciones ub ON ub.id_ubicacion = e.id_ubicacion
                 ORDER BY e.fecha_inicio DESC
             """, fetch=True)
             for item in self.tree_eventos.get_children(): self.tree_eventos.delete(item)
             for row in rows:
                 usuario = f"{row[2]} {row[3]} — #{row[1]}"
                 categoria = f"{row[5]} — #{row[4]}"
+                ubicacion = f"{row[10]} - #{row[9]}"
                 inicio = row[7].strftime("%Y-%m-%d %H:%M") if hasattr(row[7], "strftime") else row[7]
                 fin = row[8].strftime("%Y-%m-%d %H:%M") if hasattr(row[8], "strftime") else row[8]
-                self.tree_eventos.insert("", "end", values=(row[0], usuario, categoria, row[6], inicio, fin))
+                self.tree_eventos.insert("", "end", values=(row[0], usuario, categoria, row[6], inicio, fin, ubicacion))
 
             valores_u = ["Seleccione un usuario"] + list(self.usuarios_combo.keys())
             valores_c = ["Seleccione una categoría"] + list(self.categorias_combo.keys())
+            valores_ub = ["Seleccione una ubicación"] + list(self.ubicaciones_combo.keys())
             self.combo_ev_usuario.configure(values=valores_u)
             self.combo_ev_categoria.configure(values=valores_c)
+            self.combo_ev_ubicacion.configure(values=valores_ub)
         except Exception as e:
             print(f"Error cargando eventos: {e}")
+
+    # -------------------- UBICACIONES -------------------------
+
+    def cargar_datos_ubicaciones(self):
+        try:
+            rows = self.ejecutar_consulta(
+                "SELECT id_ubicacion, nombre FROM ubicaciones ORDER BY nombre", fetch=True)
+            self.ubicaciones_combo = {}
+            for uid, nombre in rows:
+                self.ubicaciones_combo[f"{nombre} - #{uid}"] = uid
+        except Exception as e:
+            print(f"Error cargando las ubicaciones: {e}")
 
     # -------------------- REFRESCO GENERAL --------------------
 
     def actualizar_todas_las_tablas(self):
         self.cargar_datos_usuarios()
         self.cargar_datos_categorias()
+        self.cargar_datos_ubicaciones()
         self.cargar_datos_eventos()
-
+        
 
 if __name__ == "__main__":
     app = AppAgenda()
