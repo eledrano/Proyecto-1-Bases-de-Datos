@@ -44,7 +44,7 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | RF-15 | 1. Modelo Conceptual | Definir la entidad tareas vinculada a eventos con atributos de título, descripción, prioridad, fecha límite, responsable y estados. | Completado |
 | | 2. Modelo Lógico | Establecer las claves foráneas que relacionan cada tarea con su evento y usuario responsable. | Completado |
 | | 3. Modelo Físico | Ejecutar la creación de la tabla tareas en PostgreSQL con restricciones para los estados predefinidos. | Completado |
-| | 4. Interfaz Gráfica (GUI) | Habilitar formularios de control para que cada usuario realice un CRUD completo (crear, leer, actualizar estados y eliminar) desde la interfaz. | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Habilitar formularios de control para que cada usuario realice un CRUD completo (crear, leer, actualizar estados y eliminar) desde la interfaz. | Completado |
 | RF-16 | 3. Modelo Físico | Desarrollar las consultas orientadas a medir el rendimiento, tareas pendientes por usuario y detección de pendientes vencidos fuera de plazo.  | Completado |
 | | 4. Interfaz Gráfica (GUI) | Configurar el despliegue de estas métricas operativas directamente en las pantallas de la aplicación.  | Pendiente |
 | RF-17 | 3. Modelo Físico | Estructurar la consulta del reporte analítico cuantitativo para filtrar tareas activas por estado y plazos vencidos. | Completado |
