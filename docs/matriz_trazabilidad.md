@@ -31,7 +31,7 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | RF-11 | 1. Modelo Conceptual | Definir la entidad disponibilidades vinculada al perfil del usuario y el catálogo tipos_disponibilidad con sus atributos obligatorios de fecha y horas. | Completado |
 | | 2. Modelo Lógico | Estructurar las tablas relacionales para el control de disponibilidades y su clave foranea hacia usuarios.  | Completado |
 | | 3. Modelo Físico | Codificar la creación de tablas y catálogos en PostgreSQL asegurando la integridad de las franjas temporales.  | Completado |
-| | 4. Interfaz Gráfica (GUI) | Desarrollar el módulo en la interfaz para que los usuarios administren sus periodos libres u ocupados mediante operaciones CRUD completas.  | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Desarrollar el módulo en la interfaz para que los usuarios administren sus periodos libres u ocupados mediante operaciones CRUD completas.  | Completado |
 | RF-12 | 3. Modelo Físico | Estructurar las consultas analíticas en el motor de base de datos para la detección de cruces o traslapes temporales entre eventos y disponibilidades.  | Completado |
 | | 4. Interfaz Gráfica (GUI) | Integrar las salidas analíticas en la GUI para determinar automáticamente usuarios libres y disponibles en un rango horario específico.  | Pendiente |
 

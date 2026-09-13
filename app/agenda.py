@@ -35,6 +35,7 @@ class AppAgenda(ctk.CTk):
         self.categorias_padre_combo = {}
         self.ubicaciones_combo = {}
         self.eventos_combo = {}
+        self.tipos_combo = {}
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -133,7 +134,8 @@ class AppAgenda(ctk.CTk):
             ("Categorías", "📁"),
             ("Eventos", "🗓️"),
             ("Ubicaciones", "📍"), # Crear pestaña Ubicaciones
-            ("Tareas", "📝") # Crear pestaña Tareas
+            ("Tareas", "📝"), # Crear pestaña Tareas
+            ("Disponibilidad", "🕰️"), # Crear pestaña Disponibilidad
         ], start=2):
             btn = ctk.CTkButton(
                 self.sidebar_frame, text=f"{icono}  {nombre}",
@@ -147,7 +149,7 @@ class AppAgenda(ctk.CTk):
             self.sidebar_frame,
             text="🔄  Recargar datos",
             command=self.actualizar_todas_las_tablas
-        ).grid(row=7, column=0, padx=15, pady=(20, 5), sticky="ew")
+        ).grid(row=8, column=0, padx=15, pady=(20, 5), sticky="ew")
 
         ctk.CTkLabel(self.sidebar_frame, text="APARIENCIA", font=ctk.CTkFont(size=11, weight="bold")).grid(
             row=11, column=0, padx=20, pady=(10, 5), sticky="w"
@@ -174,12 +176,14 @@ class AppAgenda(ctk.CTk):
         self.tab_eventos = self.tabview.add("Eventos")
         self.tab_ubicaciones = self.tabview.add("Ubicaciones")
         self.tab_tareas = self.tabview.add("Tareas")
+        self.tab_disponibilidad = self.tabview.add("Disponibilidad")
 
         self.configurar_pestana_usuarios()
         self.configurar_pestana_categorias()
         self.configurar_pestana_eventos()
         self.configurar_pestana_ubicaciones() # Ampliación area de Ubicaciones en la interfaz
         self.configurar_pestana_tareas()  # Ampliación area de Tareas en la interfaz
+        self.configurar_pestana_disponibilidad()  # Ampliación area de Disponibilidad en la interfaz
         self.seleccionar_modulo("Usuarios")
 
     def al_cambiar_pestana(self):
@@ -877,11 +881,11 @@ class AppAgenda(ctk.CTk):
     def cargar_datos_tareas(self):
         try:
             rows = self.ejecutar_consulta("""
-            SELECT t.id_tarea, t.titulo, e.id_evento, e.titulo, u.id_usuario, u.nombre, u.apellido, t.prioridad, t.estado, t.fecha_limite
-            FROM tareas t
-            JOIN eventos e ON e.id_evento = t.id_evento
-            JOIN usuarios u ON u.id_usuario = t.id_usuario
-            ORDER BY t.fecha_limite
+                SELECT t.id_tarea, t.titulo, e.id_evento, e.titulo, u.id_usuario, u.nombre, u.apellido, t.prioridad, t.estado, t.fecha_limite
+                FROM tareas t
+                JOIN eventos e ON e.id_evento = t.id_evento
+                JOIN usuarios u ON u.id_usuario = t.id_usuario
+                ORDER BY t.fecha_limite
             """, fetch=True)
             for item in self.tree_tareas.get_children(): self.tree_tareas.delete(item)
             for row in rows:
@@ -896,6 +900,160 @@ class AppAgenda(ctk.CTk):
         except Exception as e:
             print(f"Error cargando las tareas: {e}")
 
+    # -------------------- DISPONIBILIDAD ----------------------
+
+    def configurar_pestana_disponibilidad(self):
+        self.crear_encabezado(self.tab_disponibilidad, "Disponibilidad", "Revisar las franjas horarias y su disponibilidad por usuario")
+
+        cuerpo = ctk.CTkFrame(self.tab_disponibilidad, fg_color="transparent")
+        cuerpo.pack(fill="both", expand=True, padx=10, pady=5)
+        cuerpo.grid_columnconfigure(0, weight=3); cuerpo.grid_columnconfigure(1, weight=1); cuerpo.grid_rowconfigure(0, weight=1)
+        
+        tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
+        
+        self.tree_disponibilidad = self.crear_treeview(
+            tabla, ("ID", "Usuario", "Tipo", "Fecha", "Hora Inicio", "Hora Fin"),
+            (70, 200, 100, 100, 100, 100)
+        )
+        self.tree_disponibilidad.bind("<<TreeviewSelect>>", self.cargar_disponibilidad_seleccionada)
+    
+        ctk.CTkLabel(form, text="Formulario de disponibilidad", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 12))
+
+        ctk.CTkLabel(form, text="Usuario").pack(anchor="w", padx=10, pady=(8, 2))
+        self.combo_di_usuario = ctk.CTkComboBox(form, values=["Seleccione un usuario"], state="readonly")
+        self.combo_di_usuario.set("Seleccione un usuario")
+        self.combo_di_usuario.pack(fill="x", padx=10, pady=4)
+
+        ctk.CTkLabel(form, text="Tipo").pack(anchor="w", padx=10, pady=(8, 2))
+        self.combo_di_tipo = ctk.CTkComboBox(form, values=["Seleccione un tipo"], state="readonly")
+        self.combo_di_tipo.set("Seleccione un tipo")
+        self.combo_di_tipo.pack(fill="x", padx=10, pady=4)
+
+        ctk.CTkLabel(form, text="Fecha").pack(anchor="w", padx=10, pady=(8, 2))
+        self.fecha_disponibilidad = self.crear_selector_fecha(form)
+        self.fecha_disponibilidad.pack(fill="x", padx=10, pady=4)
+
+        ctk.CTkLabel(form, text="Hora Inicio").pack(anchor="w", padx=10, pady=(8, 2))
+        self.hora_di_inicio = ctk.CTkEntry(form, placeholder_text="HH:MM")
+        self.hora_di_inicio.pack(fill="x", padx=10, pady=4)
+
+        ctk.CTkLabel(form, text="Hora Fin").pack(anchor="w", padx=10, pady=(8, 2))
+        self.hora_di_fin = ctk.CTkEntry(form, placeholder_text="HH:MM")
+        self.hora_di_fin.pack(fill="x", padx=10, pady=4)        
+
+        ctk.CTkButton(form, text="➕ Crear", command=self.agregar_disponibilidad).pack(fill="x", padx=10, pady=(15, 5))
+        ctk.CTkButton(form, text="💾 Actualizar selección", command=self.actualizar_disponibilidad).pack(fill="x", padx=10, pady=5)
+        ctk.CTkButton(form, text="🧹 Nueva / Limpiar", command=self.limpiar_form_disponibilidad, fg_color="gray").pack(fill="x", padx=10, pady=5)
+        ctk.CTkButton(form, text="🗑️ Eliminar selección", command=self.eliminar_disponibilidad, fg_color="#b33939", hover_color="#8f2d2d").pack(fill="x", padx=10, pady=5)
+
+        self.limpiar_form_disponibilidad()  
+
+    def disponibilidad_seleccionada_id(self):
+        sel = self.tree_disponibilidad.selection()
+        return self.tree_disponibilidad.item(sel[0])["values"][0] if sel else None     
+
+    def cargar_disponibilidad_seleccionada(self, _=None):
+        sel = self.tree_disponibilidad.selection()
+        if not sel: return
+        vals = self.tree_disponibilidad.item(sel[0])["values"]
+        self.combo_di_usuario.set(vals[1])
+        self.combo_di_tipo.set(vals[2])  
+        self.establecer_fecha(self.fecha_disponibilidad, vals[3])
+        self.hora_di_inicio.delete(0, tk.END); self.hora_di_inicio.insert(0, vals[4])          
+        self.hora_di_fin.delete(0, tk.END); self.hora_di_fin.insert(0, vals[5])  
+
+    def limpiar_form_disponibilidad(self):
+        self.tree_disponibilidad.selection_remove(self.tree_disponibilidad.selection())
+        self.combo_di_usuario.set("Seleccione un usuario")
+        self.combo_di_tipo.set("Seleccione un tipo")
+        self.establecer_fecha(self.fecha_disponibilidad, datetime.now())
+        self.hora_di_inicio.delete(0, tk.END); self.hora_di_inicio.insert(0, "08:00")
+        self.hora_di_fin.delete(0, tk.END); self.hora_di_fin.insert(0, "12:00")
+
+    def datos_disponibilidad_formulario(self):
+        usuario = self.usuarios_combo.get(self.combo_di_usuario.get())
+        tipo = self.tipos_combo.get(self.combo_di_tipo.get())
+        fecha = self.obtener_fecha(self.fecha_disponibilidad)
+        hora_inicio = self.hora_di_inicio.get().strip()
+        hora_fin = self.hora_di_fin.get().strip()
+        if usuario is None or tipo is None:
+            raise ValueError("Seleccione un usuario y tipo de disponibilidad")
+        try:
+            ini = datetime.strptime(hora_inicio, "%H:%M")
+            fin = datetime.strptime(hora_fin, "%H:%M")
+        except ValueError:
+            raise ValueError("Las horas deben ser en el formato HH:MM")
+        if fin <= ini:
+            raise ValueError("Hora fin debe ser posterior que Hora inicio")
+        return usuario, tipo, fecha, hora_inicio, hora_fin
+
+    def agregar_disponibilidad(self):
+        try:
+            datos = self.datos_disponibilidad_formulario()
+            self.ejecutar_consulta("""
+                INSERT INTO disponibilidades
+                (id_usuario, id_tipo, fecha, hora_inicio, hora_fin)
+                VALUES (%s, %s, %s, %s, %s)
+            """, datos)
+            self.limpiar_form_disponibilidad(); self.cargar_datos_disponibilidad()
+            messagebox.showinfo("Éxito", "Franja horaria creada correctamente.")
+        except Exception as e:
+            messagebox.showerror("No se pudo crear la franja horaria", str(e))
+
+    def actualizar_disponibilidad(self):
+        did = self.disponibilidad_seleccionada_id()
+        if did is None: return messagebox.showwarning("Selección requerida", "Seleccione una franja horaria.")
+        try:
+            usuario, tipo, fecha, hora_inicio, hora_fin = self.datos_disponibilidad_formulario()
+            self.ejecutar_consulta("""
+                UPDATE disponibilidades SET id_usuario=%s, id_tipo=%s, fecha=%s, hora_inicio=%s, hora_fin=%s
+                WHERE id_disponibilidad=%s
+            """, (usuario, tipo, fecha, hora_inicio, hora_fin, did))
+            self.cargar_datos_disponibilidad()
+            messagebox.showinfo("Éxito", "Franja horaria actualizada.")
+        except Exception as e:
+            messagebox.showerror("No se pudo actualizar", str(e))
+
+    def eliminar_disponibilidad(self):
+        did = self.disponibilidad_seleccionada_id()
+        if did is None: return messagebox.showwarning("Selección requerida", "Seleccione una franja horaria.")
+        if not messagebox.askyesno("Confirmar", "¿Eliminar el registro seleccionado?"): return
+        try:
+            self.ejecutar_consulta("DELETE FROM disponibilidades WHERE id_disponibilidad=%s", (did,))
+            self.limpiar_form_disponibilidad(); self.cargar_datos_disponibilidad()
+            messagebox.showinfo("Eliminado", "Franja horaria eliminada.")
+        except Exception as e:
+            messagebox.showerror("No se pudo eliminar", str(e))
+
+    def cargar_datos_disponibilidad(self):
+        try:
+            tipos = self.ejecutar_consulta("SELECT id_tipo, nombre FROM tipos_disponibilidad ORDER BY nombre", fetch=True)
+            self.tipos_combo = {}
+            for tid, nombre in tipos:
+                self.tipos_combo[f"{nombre} - #{tid}"] = tid
+            rows = self.ejecutar_consulta("""
+                SELECT d.id_disponibilidad, u.id_usuario, u.nombre, u.apellido, td.id_tipo, td.nombre, d.fecha, d.hora_inicio, d.hora_fin
+                FROM disponibilidades d
+                JOIN usuarios u ON u.id_usuario = d.id_usuario
+                JOIN tipos_disponibilidad td ON td.id_tipo = d.id_tipo
+                ORDER BY d.fecha DESC, d.hora_inicio
+            """, fetch=True)
+            for item in self.tree_disponibilidad.get_children(): self.tree_disponibilidad.delete(item)
+            for row in rows:
+                usuario = f"{row[2]} {row[3]} - #{row[1]}"
+                tipo = f"{row[5]} - #{row[4]}"
+                fecha = row[6].strftime("%Y-%m-%d") if hasattr(row[6], "strftime") else row[6]
+                ini = row[7].strftime("%H:%M") if hasattr(row[7], "strftime") else str(row[7])[:5]
+                fin = row[8].strftime("%H:%M") if hasattr(row[8], "strftime") else str(row[8])[:5]
+                self.tree_disponibilidad.insert("", "end", values=(row[0], usuario, tipo, fecha, ini, fin))
+            valores_u = ["Seleccione un usuario"] + list(self.usuarios_combo.keys())
+            valores_t = ["Seleccione un tipo"] + list(self.tipos_combo.keys())
+            self.combo_di_usuario.configure(values=valores_u)
+            self.combo_di_tipo.configure(values=valores_t)
+        except Exception as e:
+            print(f"Error cargando disponibilidad: {e}")
+
     # -------------------- REFRESCO GENERAL --------------------
 
     def actualizar_todas_las_tablas(self):
@@ -904,6 +1062,7 @@ class AppAgenda(ctk.CTk):
         self.cargar_datos_ubicaciones()
         self.cargar_datos_eventos()
         self.cargar_datos_tareas()
+        self.cargar_datos_disponibilidad()
         
 if __name__ == "__main__":
     app = AppAgenda()
