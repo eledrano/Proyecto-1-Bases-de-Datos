@@ -46,6 +46,6 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | | 3. Modelo Físico | Ejecutar la creación de la tabla tareas en PostgreSQL con restricciones para los estados predefinidos. | Completado |
 | | 4. Interfaz Gráfica (GUI) | Habilitar formularios de control para que cada usuario realice un CRUD completo (crear, leer, actualizar estados y eliminar) desde la interfaz. | Completado |
 | RF-16 | 3. Modelo Físico | Desarrollar las consultas orientadas a medir el rendimiento, tareas pendientes por usuario y detección de pendientes vencidos fuera de plazo.  | Completado |
-| | 4. Interfaz Gráfica (GUI) | Configurar el despliegue de estas métricas operativas directamente en las pantallas de la aplicación.  | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Configurar el despliegue de estas métricas operativas directamente en las pantallas de la aplicación.  | Completado |
 | RF-17 | 3. Modelo Físico | Estructurar la consulta del reporte analítico cuantitativo para filtrar tareas activas por estado y plazos vencidos. | Completado |
-| | 4. Interfaz Gráfica (GUI) | Integrar el reporte de seguimiento dentro de la interfaz del módulo de tareas para la detección temprana de sobrecargas de trabajo.  | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Integrar el reporte de seguimiento dentro de la interfaz del módulo de tareas para la detección temprana de sobrecargas de trabajo.  | Completado |

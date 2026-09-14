@@ -638,7 +638,6 @@ class AppAgenda(ctk.CTk):
         cuerpo.pack(fill="both", expand=True, padx=10, pady=5)
         cuerpo.grid_columnconfigure(0, weight=3); cuerpo.grid_columnconfigure(1, weight=1); cuerpo.grid_rowconfigure(0, weight=1)
 
-        tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
 
         sub = ctk.CTkTabview(cuerpo)
@@ -791,15 +790,32 @@ class AppAgenda(ctk.CTk):
         cuerpo = ctk.CTkFrame(self.tab_tareas, fg_color="transparent")
         cuerpo.pack(fill="both", expand=True, padx=10, pady=5)
         cuerpo.grid_columnconfigure(0, weight=3); cuerpo.grid_columnconfigure(1, weight=1); cuerpo.grid_rowconfigure(0, weight=1)
-    
-        tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+
         form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
-    
+
+        sub = ctk.CTkTabview(cuerpo)
+        sub.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        tab_registro = sub.add("Registro")
+        tab_carga = sub.add("Carga de Trabajo")
+        tab_vencidas = sub.add("Vencidas")
+
         self.tree_tareas = self.crear_treeview(
-            tabla, ("ID", "Título", "Evento", "Responsable", "Prioridad", "Estado", "Fecha Límite"),
+            tab_registro, ("ID", "Título", "Evento", "Responsable", "Prioridad", "Estado", "Fecha Límite"),
             (70, 200, 150, 150, 100, 100, 150)
         )
         self.tree_tareas.bind("<<TreeviewSelect>>", self.cargar_tarea_seleccionada)
+
+        # Carga de trabajo en tareas por usuario
+        self.tree_carga = self.crear_treeview(
+            tab_carga, ("Usuario", "Tareas activas", "Tareas vencidas"),
+            (300, 150, 150)
+        )
+
+        # Eventos con tareas vencidas
+        self.tree_vencidas = self.crear_treeview(
+            tab_vencidas, ("Evento", "Inicio", "Tareas vencidas"),
+            (250, 150, 180)
+        )        
 
         ctk.CTkLabel(form, text="Formulario de tareas", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 12))
         
@@ -937,6 +953,21 @@ class AppAgenda(ctk.CTk):
             self.combo_ta_usuario.configure(values=valores_u)
         except Exception as e:
             print(f"Error cargando las tareas: {e}")
+
+    def cargar_reportes_tareas(self): # Llamar a las vistas creadas para reportes relacionados a las tareas
+        try:
+            rows = self.ejecutar_consulta("SELECT nombre, apellido, tareas_activas, tareas_vencidas FROM vista_carga_trabajo_usuario", fetch=True)
+            for item in self.tree_carga.get_children(): self.tree_carga.delete(item)
+            for row in rows:
+                self.tree_carga.insert("", "end", values=(f"{row[0]} {row[1]}", row[2], row[3]))
+            rows = self.ejecutar_consulta("SELECT titulo, fecha_inicio, tareas_vencidas FROM vista_eventos_tareas_vencidas", fetch=True)
+            for item in self.tree_vencidas.get_children(): self.tree_vencidas.delete(item)
+            for row in rows:
+                inicio = row[1].strftime("%Y-%m-%d %H:%M") if hasattr(row[1], "strftime") else row[1]
+                self.tree_vencidas.insert("", "end", values=(row[0], inicio, row[2]))
+        except Exception as e:
+            print(f"Error al cargar los reportes de tareas: {e}")
+
 
     # -------------------- DISPONIBILIDAD ----------------------
 
@@ -1102,6 +1133,7 @@ class AppAgenda(ctk.CTk):
         self.cargar_datos_tareas()
         self.cargar_datos_disponibilidad()
         self.cargar_reportes_ubicaciones()
+        self.cargar_reportes_tareas()
         
 if __name__ == "__main__":
     app = AppAgenda()
