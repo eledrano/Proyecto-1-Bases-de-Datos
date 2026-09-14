@@ -33,7 +33,7 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | | 3. Modelo Físico | Codificar la creación de tablas y catálogos en PostgreSQL asegurando la integridad de las franjas temporales.  | Completado |
 | | 4. Interfaz Gráfica (GUI) | Desarrollar el módulo en la interfaz para que los usuarios administren sus periodos libres u ocupados mediante operaciones CRUD completas.  | Completado |
 | RF-12 | 3. Modelo Físico | Estructurar las consultas analíticas en el motor de base de datos para la detección de cruces o traslapes temporales entre eventos y disponibilidades.  | Completado |
-| | 4. Interfaz Gráfica (GUI) | Integrar las salidas analíticas en la GUI para determinar automáticamente usuarios libres y disponibles en un rango horario específico.  | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Integrar las salidas analíticas en la GUI para determinar automáticamente usuarios libres y disponibles en un rango horario específico.  | Completado |
 
 ---
 
