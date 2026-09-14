@@ -641,11 +641,29 @@ class AppAgenda(ctk.CTk):
         tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
 
+        sub = ctk.CTkTabview(cuerpo)
+        sub.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        tab_registro = sub.add("Registro")
+        tab_ranking = sub.add("Ranking")
+        tab_simultaneos = sub.add("SImultaneos")
+
         self.tree_ubicaciones = self.crear_treeview(
-            tabla, ("ID", "Nombre", "Dirección", "Ciudad", "Capacidad"),
+            tab_registro, ("ID", "Nombre", "Dirección", "Ciudad", "Capacidad"),
             (70, 200, 250, 150, 150)
         )
         self.tree_ubicaciones.bind("<<TreeviewSelect>>", self.cargar_ubicacion_seleccionada)
+
+        # Ranking de bicaciones con más solicitudes
+        self.tree_ranking = self.crear_treeview(
+            tab_ranking, ("Ubicación", "Total de eventos"),
+            (300, 150)
+        )
+
+        # Eventos simultaneos en la misma ubicación
+        self.tree_simultaneos = self.crear_treeview(
+            tab_simultaneos, ("Primer evento", "Inicio", "Termina", "Segundo evento", "Inicia", "Finaliza"),
+            (180, 150, 150, 180, 150, 150)
+        )
         
         ctk.CTkLabel(form, text="Formulario de ubicación", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 12))
 
@@ -744,6 +762,26 @@ class AppAgenda(ctk.CTk):
                 self.ubicaciones_combo[f"{row[1]} - #{row[0]}"] = row[0]
         except Exception as e:
             print(f"Error cargando las ubicaciones: {e}")
+
+    def cargar_reportes_ubicaciones(self): # Llamar a las vistas creadas para reportes relacionados a las ubicaciones
+        try:
+            rows = self.ejecutar_consulta("SELECT nombre, total_eventos FROM vista_ranking_ubicaciones", fetch=True)
+            for item in self.tree_ranking.get_children(): self.tree_ranking.delete(item)
+            for row in rows:
+                self.tree_ranking.insert("", "end", values=(row[0], row[1]))
+            rows = self.ejecutar_consulta("""
+              SELECT evento_1, inicio_1, fin_1, evento_2, inicio_2, fin_2
+              FROM vista_eventos_simultaneos
+            """, fetch=True)
+            for item in self.tree_simultaneos.get_children(): self.tree_simultaneos.delete(item)
+            for row in rows:
+                ini1 = row[1].strftime("%Y-%m-%d %H:%M") if hasattr(row[1], "strftime") else row[1]
+                fin1 = row[2].strftime("%Y-%m-%d %H:%M") if hasattr(row[2], "strftime") else row[2]
+                ini2 = row[4].strftime("%Y-%m-%d %H:%M") if hasattr(row[4], "strftime") else row[4]
+                fin2 = row[5].strftime("%Y-%m-%d %H:%M") if hasattr(row[5], "strftime") else row[5]
+                self.tree_simultaneos.insert("", "end", values=(row[0], ini1, fin1, row[3], ini2, fin2))
+        except Exception as e:
+            print(f"Error al cargar los reportes de ubicaciones: {e}")
 
     # -------------------- TRAEAS ------------------------------
 
@@ -1063,6 +1101,7 @@ class AppAgenda(ctk.CTk):
         self.cargar_datos_eventos()
         self.cargar_datos_tareas()
         self.cargar_datos_disponibilidad()
+        self.cargar_reportes_ubicaciones()
         
 if __name__ == "__main__":
     app = AppAgenda()

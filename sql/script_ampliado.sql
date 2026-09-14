@@ -91,7 +91,7 @@ create view vista_eventos_simultaneos as
 	       e2.titulo as evento_2, e2.fecha_inicio as inicio_2, e2.fecha_fin as fin_2, e1.id_ubicacion 
 	from eventos e1 join eventos e2 on e1.id_ubicacion = e2.id_ubicacion 
 	where e1.id_evento < e2.id_evento 
-	and e1.fecha_fin < e2.fecha_fin and e2.fecha_inicio < e1.fecha_fin 
+	and e1.fecha_inicio < e2.fecha_fin and e2.fecha_inicio < e1.fecha_fin 
 
 -- Consulta RF-12
 

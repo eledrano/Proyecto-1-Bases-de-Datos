@@ -18,9 +18,9 @@ Módulos seleccionados: Gestión de Ubicaciones · Disponibilidad de Usuarios y 
 | RF-09 | 1. Modelo Conceptual | Establecer la relación de cardinalidad entre la entidad Eventos y la entidad ubicaciones mediante la clave foránea id_ubicacion.  | Completado |
 | | 2. Modelo Lógico | Incorporar el atributo id_ubicacion como Clave Foránea (FK) en el esquema relacional de eventos para estructurar consultas complejas.  | Completado |
 | | 3. Modelo Físico | Ejecutar la sentencia en PostgreSQL para añadir la relación referencial y soportar la detección de eventos simultáneos en un mismo recinto.  | Completado |
-| | 4. Interfaz Gráfica (GUI) | Integrar consultas y selectores en la interfaz para consultar el histórico por ubicación y prevenir conflictos de espacio temporal. | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Integrar consultas y selectores en la interfaz para consultar el histórico por ubicación y prevenir conflictos de espacio temporal. | Completado |
 | RF-10 | 3. Modelo Físico | Diseñar y escribir las consultas para calcular el ranking de recintos más solicitados y con mayor volumen de eventos.  | Completado |
-| | 4. Interfaz Gráfica (GUI) | Implementar un panel de reportes de solo lectura en la GUI para mostrar la tasa de uso de los espacios y la demanda operativa. | Pendiente |
+| | 4. Interfaz Gráfica (GUI) | Implementar un panel de reportes de solo lectura en la GUI para mostrar la tasa de uso de los espacios y la demanda operativa. | Completado |
 
 ---
 
