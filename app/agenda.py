@@ -978,14 +978,31 @@ class AppAgenda(ctk.CTk):
         cuerpo.pack(fill="both", expand=True, padx=10, pady=5)
         cuerpo.grid_columnconfigure(0, weight=3); cuerpo.grid_columnconfigure(1, weight=1); cuerpo.grid_rowconfigure(0, weight=1)
         
-        tabla = ctk.CTkFrame(cuerpo); tabla.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         form = ctk.CTkScrollableFrame(cuerpo, width=350); form.grid(row=0, column=1, sticky="nsew")
+
+        sub = ctk.CTkTabview(cuerpo)
+        sub.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        tab_registro = sub.add("Registro")
+        tab_ocupados = sub.add("Ocupados")
+        tab_libres = sub.add("Franjas Libres")
         
         self.tree_disponibilidad = self.crear_treeview(
-            tabla, ("ID", "Usuario", "Tipo", "Fecha", "Hora Inicio", "Hora Fin"),
+            tab_registro, ("ID", "Usuario", "Tipo", "Fecha", "Hora Inicio", "Hora Fin"),
             (70, 200, 100, 100, 100, 100)
         )
         self.tree_disponibilidad.bind("<<TreeviewSelect>>", self.cargar_disponibilidad_seleccionada)
+
+        # Usuarios ocupados en franjas
+        self.tree_ocupados = self.crear_treeview(
+            tab_ocupados, ("Usuario", "Ocupado desde", "Ocupado Hasta", "Motivo"),
+            (200, 150, 150, 200)
+        )
+        
+        # Franjas disponibles
+        self.tree_libres = self.crear_treeview(
+            tab_libres, ("Usuario", "Desde", "Hasta"),
+            (180, 150, 150)
+        )
     
         ctk.CTkLabel(form, text="Formulario de disponibilidad", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 12))
 
@@ -1123,6 +1140,31 @@ class AppAgenda(ctk.CTk):
         except Exception as e:
             print(f"Error cargando disponibilidad: {e}")
 
+    def cargar_reportes_disponibilidad(self): # Llamar a las vistas creadas para reportes relacionados a la disponibilidad
+        try:
+            rows = self.ejecutar_consulta("""
+                SELECT nombre, apellido, ocupado_desde, ocupado_hasta, motivo 
+                FROM vista_usuarios_ocupados
+                ORDER BY ocupado_desde
+            """, fetch=True)
+            for item in self.tree_ocupados.get_children(): self.tree_ocupados.delete(item)
+            for row in rows:
+                desde = row[2].strftime("%Y-%m-%d %H:%M") if hasattr(row[2], "strftime") else row[2]
+                hasta = row[3].strftime("%Y-%m-%d %H:%M") if hasattr(row[3], "strftime") else row[3]
+                self.tree_ocupados.insert("", "end", values=(f"{row[0]} {row[1]}", desde, hasta, row[4]))
+            rows = self.ejecutar_consulta("""
+              SELECT nombre, apellido, disponible_desde, disponible_hasta
+              FROM vista_franjas_disponibles
+              ORDER BY disponible_desde
+            """, fetch=True)
+            for item in self.tree_libres.get_children(): self.tree_libres.delete(item)
+            for row in rows:
+                desde = row[2].strftime("%Y-%m-%d %H:%M") if hasattr(row[2], "strftime") else row[2]
+                hasta = row[3].strftime("%Y-%m-%d %H:%M") if hasattr(row[3], "strftime") else row[3]
+                self.tree_libres.insert("", "end", values=(f"{row[0]} {row[1]}", desde, hasta))
+        except Exception as e:
+            print(f"Error al cargar los reportes de disponibilidad: {e}")    
+
     # -------------------- REFRESCO GENERAL --------------------
 
     def actualizar_todas_las_tablas(self):
@@ -1134,6 +1176,7 @@ class AppAgenda(ctk.CTk):
         self.cargar_datos_disponibilidad()
         self.cargar_reportes_ubicaciones()
         self.cargar_reportes_tareas()
+        self.cargar_reportes_disponibilidad()
         
 if __name__ == "__main__":
     app = AppAgenda()
