@@ -988,7 +988,7 @@ class AppAgenda(ctk.CTk):
         
         self.tree_disponibilidad = self.crear_treeview(
             tab_registro, ("ID", "Usuario", "Tipo", "Fecha", "Hora Inicio", "Hora Fin"),
-            (70, 200, 100, 100, 100, 100)
+            (70, 200, 150, 150, 100, 100)
         )
         self.tree_disponibilidad.bind("<<TreeviewSelect>>", self.cargar_disponibilidad_seleccionada)
 
